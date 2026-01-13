@@ -1,0 +1,19 @@
+# ATTESTORIUM LOG
+# Immutable attestation ledger
+# This file contains records, not code.
+# Entries are append-only by convention.
+# Deletion invalidates historical continuity.
+
+# Format:
+# ---
+# ATTESTATION
+# time:    <UTC ISO-8601>
+# repo:    <path>
+# commit:  <hash>
+# tree:    <hash>
+# digest:  <sha256>
+#
+# stdin:
+# <observed input>
+# ---
+
