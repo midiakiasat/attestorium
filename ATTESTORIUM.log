@@ -5,15 +5,14 @@
 # Deletion invalidates historical continuity.
 
 # Format:
-# ---
+# ----------
 # ATTESTATION
-# time:    <UTC ISO-8601>
-# repo:    <path>
-# commit:  <hash>
-# tree:    <hash>
-# digest:  <sha256>
+# repo:      <path>
+# commit:    <hash | UNCOMMITTED>
+# tree:      <hash | UNCOMMITTED>
+# time:      <UTC ISO-8601>
+# digest:    <sha256>
 #
 # stdin:
 # <observed input>
-# ---
-
+# ----------

@@ -3,67 +3,57 @@
 # Deterministic attestation utility
 # Witness only. No execution. No mutation. No remediation.
 
-set -euf
+set -eu
 
 # --- Preconditions ---------------------------------------------------------
 
-# Must be inside a git repository
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
-  echo "ATTESTORIUM: not a git repository" >&2
+  printf '%s\n' "ATTESTORIUM: not a git repository" >&2
   exit 2
 }
 
 # --- Input Capture ----------------------------------------------------------
 
-# Read stdin verbatim (stream-safe)
-INPUT="$(cat || true)"
+INPUT="$(cat)"
 
-# Silence is invalid
 [ -z "$INPUT" ] && {
-  echo "ATTESTORIUM: INVALID";
+  printf '%s\n' "ATTESTORIUM: INVALID"
   exit 1
 }
 
 # --- Attestation Context ----------------------------------------------------
 
-# Immutable context snapshot
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-HEAD_COMMIT="$(git rev-parse HEAD)"
-HEAD_TREE="$(git rev-parse HEAD^{tree})"
-TIMESTAMP="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-# Working tree status (null-delimited, deterministic ordering)
+HEAD_COMMIT="$(git rev-parse --verify HEAD 2>/dev/null || printf '%s' UNCOMMITTED)"
+HEAD_TREE="$(git rev-parse --verify HEAD^{tree} 2>/dev/null || printf '%s' UNCOMMITTED)"
+
+TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+
 STATUS="$(git status --porcelain=v1 -z | LC_ALL=C sort -z || true)"
 
 # --- Deterministic Digest ---------------------------------------------------
 
-# Canonical attestation material
-ATTESTATION_PAYLOAD=$(printf '%s\n%s\n%s\n%s\n%s' \
+ATTESTATION_PAYLOAD="$(printf '%s\n%s\n%s\n%s\n%s' \
   "$TIMESTAMP" \
   "$HEAD_COMMIT" \
   "$HEAD_TREE" \
   "$STATUS" \
   "$INPUT"
-)
+)"
 
-# Cryptographic digest (portable)
-DIGEST="$(printf '%s' "$ATTESTATION_PAYLOAD" | shasum -a 256 | awk '{print $1}')"
+DIGEST="$(printf '%s' "$ATTESTATION_PAYLOAD" | sha256sum | awk '{print $1}')"
 
 # --- Output ----------------------------------------------------------------
 
-# Emit attestation record (machine-first, human-readable)
-cat <<EOF
-ATTESTATION
-----------
-repo:      $REPO_ROOT
-commit:    $HEAD_COMMIT
-tree:      $HEAD_TREE
-time:      $TIMESTAMP
-digest:    $DIGEST
+printf '%s\n' "ATTESTATION"
+printf '%s\n' "----------"
+printf 'repo:      %s\n' "$REPO_ROOT"
+printf 'commit:    %s\n' "$HEAD_COMMIT"
+printf 'tree:      %s\n' "$HEAD_TREE"
+printf 'time:      %s\n' "$TIMESTAMP"
+printf 'digest:    %s\n\n' "$DIGEST"
+printf '%s\n' "stdin:"
+printf '%s\n' "$INPUT"
 
-stdin:
-$INPUT
-EOF
-
-# Exit success: attestation completed
 exit 0
