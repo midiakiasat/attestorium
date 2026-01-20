@@ -173,3 +173,5 @@ Use of this software in environments where failure, compliance, legal exposure, 
 The original maintainer is available for assurance, adaptation, and responsibility when such accountability is required.
 
 Contact: contact@speedkit.eu
+
+Authoritative signed records are issued separately and are not produced by the software.
