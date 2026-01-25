@@ -1,0 +1,88 @@
+name: Determinism Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  determinism:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test empty stdin → deterministic INVALID
+        run: |
+          set -eu
+          EXIT_CODE=0
+          ./attestorium.sh < /dev/null > output.txt 2>&1 || EXIT_CODE=$?
+          
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            echo "FAIL: Empty stdin should not succeed"
+            exit 1
+          fi
+          echo "PASS: Empty stdin rejected with exit code $EXIT_CODE"
+
+      - name: Test determinism (run twice)
+        run: |
+          set -eu
+          echo "test input" | ./attestorium.sh > output1.txt 2>&1 || true
+          echo $? > exit1.txt
+          
+          echo "test input" | ./attestorium.sh > output2.txt 2>&1 || true
+          echo $? > exit2.txt
+          
+          if ! diff output1.txt output2.txt; then
+            echo "FAIL: stdout differs"
+            exit 1
+          fi
+          
+          if ! diff exit1.txt exit2.txt; then
+            echo "FAIL: exit code differs"
+            exit 1
+          fi
+          
+          echo "PASS: determinism verified"
+
+      - name: Test no state mutation
+        run: |
+          set -eu
+          find . -type f | sort > before.txt
+          
+          echo "test" | ./attestorium.sh > /dev/null 2>&1 || true
+          
+          find . -type f | sort > after.txt
+          
+          if ! diff before.txt after.txt; then
+            echo "FAIL: filesystem mutated"
+            exit 1
+          fi
+          
+          echo "PASS: no state mutation"
+
+      - name: Test env isolation
+        run: |
+          set -eu
+          env | sort > env_before.txt
+          echo "test" | ./attestorium.sh > /dev/null 2>&1 || true
+          env | sort > env_after.txt
+          
+          if ! diff env_before.txt env_after.txt; then
+            echo "FAIL: environment mutated"
+            exit 1
+          fi
+          echo "PASS: no env mutation"
+
+  version-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify VERSION is locked at v0.0.0
+        run: |
+          VERSION=$(head -1 VERSION)
+          if [ "$VERSION" != "v0.0.0" ]; then
+            echo "FAIL: VERSION must be v0.0.0, got $VERSION"
+            exit 1
+          fi
+          echo "PASS: VERSION locked at v0.0.0"
+
