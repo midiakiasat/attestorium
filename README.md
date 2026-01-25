@@ -1,4 +1,15 @@
-# ATTESTORIUM
+```
+PRIM-003
+ATTESTORIUM
+Deterministic witness
+
+STATUS: REGISTERED
+REGISTRY: https://speedkit.eu
+```
+
+Registered artifact. Identity governed by SPEEDKIT registry.
+
+---
 
 ATTESTORIUM is a deterministic witness.
 
