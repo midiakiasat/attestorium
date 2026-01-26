@@ -10,6 +10,8 @@ SNAPSHOT: https://speedkit.eu/REGISTRY_SNAPSHOT.json
 
 Registered artifact. Identity governed by SPEEDKIT registry.
 
+STATUS: FINAL
+
 ---
 
 ATTESTORIUM is a deterministic witness.
